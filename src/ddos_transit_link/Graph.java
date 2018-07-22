@@ -133,7 +133,7 @@ public class Graph {
         GraphDraw frame = new GraphDraw(new ArrayList<>(Nodes.values()), new ArrayList<>(Edges.values()));
         // System.out.println("N" + Nodes.size());
         //System.out.println("E" + Edges.size());
-        frame.setSize(1200, 800);
+        frame.setSize(1000, 1000);
         //frame.setAlwaysOnTop(true);
         frame.setVisible(true);
     }
@@ -601,14 +601,14 @@ public class Graph {
          int NID = Collections.max(G2.Nodes.keySet()) + 1;
         ArrayList<Node> g2nodes=new ArrayList<Node>(G2.Nodes.values());
         for (Node n : g2nodes) {
-             System.out.println(n+""+n.Edges.keySet());
+           //  System.out.println(n+""+n.Edges.keySet());
             if (n.color != Color.BLACK) {
                 if (n.ID != V.ID) {
                     //for all white nodes
                     HashMap<Integer, Node> IN = new HashMap<Integer, Node>();
                     HashMap<Integer, Node> OUT = new HashMap<Integer, Node>();
                     
-                    System.out.println(n.Edges);
+                  //  System.out.println(n.Edges);
                     for (Edge e : n.Edges.values()) {
                        
                         if (e.B.ID == n.ID) {
@@ -683,5 +683,57 @@ public class Graph {
         return G2;
     }
     
+    
+    
+    void RemoveNode(Node n)
+    {
+        for(Node nn: n.Neighbors.values())
+        {
+            Edge e=nn.getLink(n);
+            nn.Edges.remove(e.ID);
+            Edges.remove(e.ID);
+            nn.Neighbors.remove(n.ID);
+            Nodes.remove(n.ID);
+        }
+    }
+    void AddNode(Node n)
+    {
+        for(Node nn: n.Neighbors.values())
+        {
+            Edge e=n.getLink(nn);
+            nn.Edges.put(e.ID,e);
+            Edges.put(e.ID, e);
+            nn.Neighbors.put(n.ID,n);
+              Nodes.put(n.ID,n);
+        }
+    }
   
+    
+  int heavy_link()
+  {      
+      HashMap<Integer, Integer> EC = new HashMap<Integer, Integer>();
+      for (Node u : Nodes.values()) {
+          if(u.Type.equals("U")){
+          ArrayList<Edge> path = getPath(u);
+          for (Edge e : path) {
+
+ {
+                  int x = EC.getOrDefault(e.ID, 0);
+                  x++;
+                  EC.put(e.ID, x);
+              }
+          }}
+      }
+      int max=-1;
+      System.out.println("Weights:"+ EC);
+      for (int i : EC.keySet()) {
+          
+          if(max<EC.get(i))
+          {
+              max=EC.get(i);
+          }
+      }
+      return max;
+  }
+
 }
