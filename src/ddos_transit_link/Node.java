@@ -26,15 +26,18 @@ public class Node {
     int N_PATH = 0;
     int NC_PATH = 0;
 
-    ArrayList<Integer> RT;
+    int N_PATH_D = 0;
+    int NC_PATH_D = 0;
+    ArrayList<Integer> NH_D;
     ArrayList<Integer> NH;
     int D = -1;
+    int D_D = -1;
 
     public Node(int ID) {
         this.ID = ID;
         Neighbors = new HashMap<Integer, Node>();
         Edges = new HashMap<Integer, Edge>();
-        RT = new ArrayList<Integer>();
+        NH_D = new ArrayList<Integer>();
         NH = new ArrayList<Integer>();
     }
 

@@ -11,6 +11,7 @@ import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Scanner;
 import java.util.StringTokenizer;
 
@@ -254,11 +255,21 @@ public class Graph {
         }
     }
 
+    void saveDetourRT() {
+        for (Node n : Nodes.values()) {
+            n.D_D = n.D;
+            //   System.out.println("n.DD");
+            n.NH_D.addAll(n.NH);
+            n.NC_PATH_D = n.NC_PATH;
+            n.N_PATH = n.NC_PATH_D;
+        }
+    }
+
     void printRT() {
         System.out.println("************printing routing table*************");
         for (Node n : Nodes.values()) {
             System.out.println("NID:" + n.ID);
-            System.out.println(n.D + "" + n.NH);
+            System.out.println(n.D + "" + n.NH + "\t" + n.D_D + "" + n.NH_D);
             System.out.println("P:" + n.N_PATH + "\t CP:" + n.NC_PATH);
         }
     }
@@ -275,16 +286,31 @@ public class Graph {
 
         for (Node u : Users.values()) {
             ArrayList<Edge> path = getPath(u);
+            System.out.println("U:" + u + "" + path);
             boolean flag = false;
-            for (int i = path.size() - 1; i > 0; i--) {
-                Edge e = path.get(i);
+            for (Edge e : path) {
                 if (C_Edges.containsKey(e.ID)) {
                     flag = true;
                 }
-                if (flag) {
-                    e.color = Color.red;
-                    e.congested = true;
-                    PC_Edges.put(e.ID, e);
+            }
+            if (flag) {
+                for (Edge e : path) {
+                    if ((e.color != Color.green)
+                            && (e.A.Type.equals("R"))
+                            && (e.B.Type.equals("R"))) {
+                        e.color = Color.red;
+                        e.congested = true;
+                        PC_Edges.put(e.ID, e);
+                    }
+                }
+            } else {
+
+                for (Edge e : path) {
+
+                    e.color = Color.green;
+                    e.congested = false;
+                    PC_Edges.remove(e.ID);
+
                 }
             }
         }
@@ -292,6 +318,7 @@ public class Graph {
     }
 
     ArrayList<Edge> getPath(Node n) {
+        System.out.println("path to: " + n + n.NH);
         ArrayList<Edge> p = new ArrayList<Edge>();
         Node nh = null;
         if (n.ID != V.ID) {
@@ -333,11 +360,9 @@ public class Graph {
             removeEdge(e);
         }
 
-        for (Node n : Nodes.values()) {
-            //  System.out.println(n.ID + ":" + n.Neighbors.values());
-        }
         calculateRT();
-        //printRT();
+        saveDetourRT();
+        // printRT();
 
         System.out.println(U_N_D.values());
         for (Node u : U_N_D.values()) {
@@ -430,57 +455,113 @@ public class Graph {
                 if (n.color == Color.black || CF[n.ID]) {
 
                     e.color = Color.red;
-                } else {
+                } else if (e.color != Color.RED) {
                     e.color = Color.green;
                 }
             }
 
         }
 
+    }
+
+    ArrayList<Integer> findNH(Node n, int D) {
+        ArrayList<Integer> r = new ArrayList<Integer>();
+
+        if (n.ID == V.ID) {
+            return r;
+        }
+        int mind = D;
+        for (Node nn : n.Neighbors.values()) {
+            if (nn.ID == V.ID) {
+                r.add(V.ID);
+                return r;
+            }
+            if ((mind >= nn.D) && (nn.color == Color.orange)) {
+                mind = nn.D;
+            }
+        }
+
+        for (Node nn : n.Neighbors.values()) {
+            if (nn.D <= mind) {
+                r.add(nn.ID);
+            }
+        }
+        return r;
     }
 
     void createDetourFlow(Node u) {
+
         boolean[] CF = new boolean[Nodes.size()];
+        boolean[] V = new boolean[Nodes.size()];
         for (int i = 0; i < CF.length; i++) {
             CF[i] = false;
         }
-        ArrayList<Integer> NH = new ArrayList<Integer>();
+        HashSet<Integer> NH = new HashSet<Integer>();
+
         NH.add(u.ID);
+        HashSet<Integer> NH2 = new HashSet<Integer>();
+
+        int mind = Integer.MAX_VALUE;
+        for (Node nn : u.Neighbors.values()) {
+            if ((mind >= nn.D) && (nn.color == Color.orange)) {
+                mind = nn.D;
+            }
+        }
         while (!NH.isEmpty()) {
-            Node n = Nodes.get(NH.remove(0));
+            for (int n : NH) {
+                Node N = Nodes.get(n);
+                ArrayList<Integer> nh = findNH(N, mind);
 
-            int Min_Det_D = Integer.MAX_VALUE;
+                for (int nn : nh) {
+                    Node NN = Nodes.get(nn);
+                    Edge e = N.getLink(NN);
+                    if (NN.color == Color.black || CF[N.ID]) {
+                        CF[NN.ID] = true;
+                    }
+                    if (N.color == Color.black || CF[N.ID]) {
 
-            //find min detour distance
-            for (Node neigh : n.Neighbors.values()) {
-                if (neigh.color == Color.orange) {
-                    if (Min_Det_D > neigh.D) {
-                        Min_Det_D = neigh.D;
+                        e.color = Color.red;
+                    } else if (e.color != Color.red) {
+                        e.color = Color.green;
+                    }
+
+                    if (!V[NN.ID]) {
+                        NH2.add(NN.ID);
                     }
                 }
+                V[N.ID] = true;
+
             }
-            for (Node neigh : n.Neighbors.values()) {
-                if (Min_Det_D >= neigh.D) {
-                    NH.add(neigh.ID);
-                }
-            }
-
-            for (int i : n.NH) {
-                Node nn = Nodes.get(i);
-                if (nn.color == Color.black || CF[n.ID]) {
-                    CF[i] = true;
-                }
-                Edge e = n.getLink(i);
-
-                if (n.color == Color.black || CF[n.ID]) {
-
-                    e.color = Color.red;
-                } else {
-                    e.color = Color.green;
-                }
-            }
-
+            NH.clear();
+            NH.addAll(NH2);
+            NH2.clear();
+            mind--;
         }
+    }
+
+    Graph TransForm2() {
+        Graph G2 = new Graph();
+
+        for (Edge e : Edges.values()) {
+            if (e.color == Color.RED) {
+                Node A = new Node(e.A.ID);
+                A.x = e.A.x;
+                A.y = e.A.y;
+
+                Node B = new Node(e.B.ID);
+                B.x = e.B.x;
+                B.y = e.B.y;
+
+                G2.Nodes.put(A.ID, A);
+                G2.Nodes.put(B.ID, B);
+                Edge ee = new Edge(A, B, e.ID);
+                ee.color = e.color;
+                G2.Edges.put(ee.ID, ee);
+
+            }
+        }
+        return G2;
 
     }
+
 }

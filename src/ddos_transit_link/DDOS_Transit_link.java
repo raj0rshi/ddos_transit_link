@@ -21,7 +21,7 @@ public class DDOS_Transit_link {
         // TODO code application logic here
 
         Graph G = new Graph();
-        G.markCOngested(1);
+        G.markCOngested(2);
         G.ReadFile();
         G.calculateRT();
         // G.printRT();
@@ -29,21 +29,34 @@ public class DDOS_Transit_link {
         G.calculateDetourNeedingNodes();
         G.calculateNodesAndEdgesOnDetour();
         G.addVirtualUser();
-       //  G.Draw();
+      //  G.Draw();
         Graph G1 = G.Transform();
 
         System.out.println(G1.V.ID);
         G1.calculateRT();
-        G1.printRT();
-         G1.Draw();
+        //  G1.printRT();
+
         System.out.println(G1.U_N_D);
-        for (Node u : G1.U_N_D.values()) {
-            if (u.color==Color.green) {
-                System.out.println("U:" + u);
-                G1.createFlow(G1.Nodes.get(16));
-                //break;
+        for (Node u : G1.Nodes.values()) {
+            if (u.Type.equals("U")) {
+
+                boolean flag = false;
+                for (Node nn : u.Neighbors.values()) {
+                    if (nn.color == Color.orange) {
+                        flag = true;
+                    }
+                }
+                if (flag) {
+                    System.out.println("U:" + u);
+                    G1.createDetourFlow(u);
+                } else {
+                    G1.createFlow(u);
+                }
             }
         }
-
+        G1.Draw();
+      
+      Graph G2=G1.TransForm2();
+     // G2.Draw();
     }
 }
