@@ -597,8 +597,11 @@ public class Graph {
            // System.out.println("N:"+n+"="+n.Edges.values());
         }
         
-        int EID = Collections.max(G2.Edges.keySet()) + 1;
-         int NID = Collections.max(G2.Nodes.keySet()) + 1;
+       // System.out.println("G2 edges sixe"+G2.Edges.size());
+         int EID=0;
+         if(!G2.Edges.isEmpty())  EID = Collections.max(G2.Edges.keySet()) + 1;
+         int NID=0;
+        if(!G2.Nodes.isEmpty()) NID = Collections.max(G2.Nodes.keySet()) + 1;
         ArrayList<Node> g2nodes=new ArrayList<Node>(G2.Nodes.values());
         for (Node n : g2nodes) {
            //  System.out.println(n+""+n.Edges.keySet());
@@ -678,7 +681,7 @@ public class Graph {
               }
             }
         }
-        U.y=U.y/count;
+        if(count!=0)U.y=U.y/count;
         U.x+=50;
         return G2;
     }
@@ -707,33 +710,37 @@ public class Graph {
               Nodes.put(n.ID,n);
         }
     }
-  
+   int Users_count=0;
+   int Affected_users=0;
     
   int heavy_link()
-  {      
+  {
       HashMap<Integer, Integer> EC = new HashMap<Integer, Integer>();
       for (Node u : Nodes.values()) {
-          if(u.Type.equals("U")){
-          ArrayList<Edge> path = getPath(u);
-          for (Edge e : path) {
-
- {
-                  int x = EC.getOrDefault(e.ID, 0);
-                  x++;
-                  EC.put(e.ID, x);
+          if (u.Type.equals("U")) {
+              Users_count++;
+              ArrayList<Edge> path = getPath(u);
+              //     System.out.println(u);
+              for (Edge e : path) {
+                  if (e.A.Type.equals("R") && e.B.Type.equals("R")) {
+                      int x = EC.getOrDefault(e.ID, 0);
+                      x++;
+                      EC.put(e.ID, x);
+                  }
               }
-          }}
-      }
-      int max=-1;
-      System.out.println("Weights:"+ EC);
-      for (int i : EC.keySet()) {
-          
-          if(max<EC.get(i))
-          {
-              max=EC.get(i);
           }
       }
-      return max;
+      int max = -1;
+      int max_i = 0;
+      //  System.out.println("Weights:"+ EC);
+      for (int i : EC.keySet()) {
+
+          if (max < EC.get(i)) {
+              max = EC.get(i);
+              max_i = i;
+          }
+      }
+      return max_i;
   }
 
 }
